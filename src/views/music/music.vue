@@ -1,12 +1,18 @@
+/*
+ * @Author: 苑振东 
+ * @Date: 2019-09-04 19:50:12 
+ * @Last Modified by:   苑振东 
+ * @Last Modified time: 2019-09-04 19:50:12 
+ */
 <template>
-  <el-container>
+  <el-container class="m-wraper-music">
     <el-header class="m-header">
       <div>
         <span>欢迎：{{username}}</span>
         <el-button size="mini" type="primary" @click="quit">退出</el-button>
       </div>
     </el-header>
-    <el-container>
+    <el-container class="m-container">
       <el-aside width="200px">Aside</el-aside>
       <el-main>Main</el-main>
     </el-container>
@@ -68,5 +74,12 @@ export default {
 
 .m-header {
   text-align: right;
+}
+.m-container {
+  height: 100%;
+}
+.m-wraper-music {
+  width: 100%;
+  height: 100%;
 }
 </style>
