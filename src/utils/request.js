@@ -2,7 +2,7 @@
  * @Author: 苑振东 
  * @Date: 2019-09-03 16:49:53 
  * @Last Modified by: 苑振东
- * @Last Modified time: 2019-09-04 11:00:22
+ * @Last Modified time: 2019-09-04 16:15:17
  */
 import axios from 'axios'
 import router from '@/router'
@@ -43,7 +43,7 @@ instance.interceptors.response.use(function(response) {
             case 401:
                 {
                     alert('权限不够 登陆过期')
-                    router.push('/login')
+                    router.replace('/login')
                     return
                 }
             default:

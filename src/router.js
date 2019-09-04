@@ -1,30 +1,51 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Home from './views/Home.vue'
 
 Vue.use(Router)
 
-export default new Router({
+let router = new Router({
     mode: 'history',
     base: process.env.BASE_URL,
     routes: [{
-            path: '/',
-            name: 'home',
-            component: Home
-        },
-        {
-            path: '/about',
-            name: 'about',
-            // route level code-splitting
-            // this generates a separate chunk (about.[hash].js) for this route
-            // which is lazy-loaded when the route is visited.
-            component: () =>
-                import ( /* webpackChunkName: "about" */ './views/About.vue')
-        }, {
-            path: '/login',
-            name: 'login',
-            component: () =>
-                import ('./views/login.vue')
-        }
-    ]
+        path: '/',
+        name: 'init',
+        redirect: '/music'
+    }, {
+        path: '/music',
+        name: 'music',
+        component: () =>
+            import ('./views/music/music.vue')
+    }, {
+        path: '/login',
+        name: 'login',
+        component: () =>
+            import ('./views/login/login.vue')
+    }, {
+        path: '/registry',
+        name: 'registry',
+        component: () =>
+            import ('./views/registry/registry.vue')
+    }, {
+        path: '*',
+        component: () =>
+            import ('./views/fourZeroFour/404.vue')
+    }]
 })
+
+let GuardNavigation = ['/music']
+
+router.beforeEach((to, from, next) => {
+    let flag = GuardNavigation.includes(to.path);
+    if (flag) {
+        let token = localStorage.getItem('token');
+        if (token) {
+            next()
+        } else {
+            next('/login')
+        }
+    } else {
+        next()
+    }
+})
+
+export default router
