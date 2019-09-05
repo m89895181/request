@@ -2,7 +2,7 @@
  * @Author: 苑振东 
  * @Date: 2019-09-04 19:50:12 
  * @Last Modified by: 苑振东
- * @Last Modified time: 2019-09-05 14:56:50
+ * @Last Modified time: 2019-09-05 17:51:17
  */
 <template>
   <el-container class="m-wraper-music">
@@ -53,7 +53,7 @@
               <el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
             </template>
           </el-table-column>
-          <!-- start dialog==>delete -->
+          <!-- start   dialog ==> delete -->
           <el-dialog
             title="提示"
             :visible.sync="dialogVisible"
@@ -80,7 +80,9 @@
               <el-input v-model="form.singer_name" auto-complete="off"></el-input>
             </el-form-item>
             <el-form-item label="图片" :label-width="formLabelWidth">
-              <el-input v-model="form.pic" auto-complete="off"></el-input>
+              <input type="file" @change="upload" />
+              <img :src="form.pic" alt style="width:50px" />
+              {{form.pic}}
             </el-form-item>
             <el-form-item label="是否上架" :label-width="formLabelWidth">
               <el-checkbox v-model="form.isup" auto-complete="off"></el-checkbox>
@@ -88,10 +90,19 @@
           </el-form>
           <div slot="footer" class="dialog-footer">
             <el-button @click="dialogFormVisible = false">取 消</el-button>
-            <el-button type="primary" @click="dialogFormVisible = false">确 定</el-button>
+            <el-button type="primary" @click="handleEnter">确 定</el-button>
           </div>
         </el-dialog>
         <!-- end dialog==> add/change -->
+        <!-- start 分页器 -->
+        <el-pagination
+          background
+          layout="prev, pager, next"
+          :total="total"
+          @current-change="handleChange"
+          :page-size="limit"
+        ></el-pagination>
+        <!-- end 分页器 -->
       </el-main>
     </el-container>
   </el-container>
@@ -102,6 +113,9 @@ import { mapState, mapMutations, mapActions } from "vuex";
 export default {
   data() {
     return {
+      pagenum: 1,
+      total: 10,
+      limit: 2,
       dialogVisible: false,
       myMsg: "",
       changeList: false,
@@ -110,7 +124,7 @@ export default {
         music_name: "",
         singer_name: "",
         pic: "",
-        isup: null
+        isup: true
       },
       formLabelWidth: "120px"
     };
@@ -121,11 +135,14 @@ export default {
         this.changeUserName(res.data.data.username);
       }
     });
-    this.$api.music.getMusic({ pagenum: "1", limit: "10" }).then(res => {
-      if (res.data.code == 1) {
-        this.changeCurMusic(res.data.data);
-      }
-    });
+    this.$api.music
+      .getMusic({ pagenum: this.pagenum, limit: this.limit })
+      .then(res => {
+        if (res.data.code == 1) {
+          this.total = res.data.total;
+          this.changeCurMusic(res.data.data);
+        }
+      });
   },
   methods: {
     ...mapMutations(["changeUserName", "changeCurMusic", "getMusic"]),
@@ -150,13 +167,13 @@ export default {
           music_name: "",
           singer_name: "",
           pic: "",
-          isup: false
+          isup: true
         };
         this.myMsg = "添加";
       } else {
         this.changeList = true;
         this.form = row;
-        row.isup == 1 ? (this.form.isup = true) : false;
+        row.isup == 1 ? (this.form.isup = 1) : 0;
         this.myMsg = "修改";
       }
       this.dialogFormVisible = true;
@@ -170,24 +187,86 @@ export default {
         .then(_ => {
           this.$api.music.deleteMusic({ id: row.id }).then(res => {
             if (res.data.code == 1) {
-              this.$api.music.getMusic({ limit: 10, pagenum: 1 }).then(res => {
-                this.changeCurMusic(res.data.data);
-              });
+              this.$api.music
+                .getMusic({ limit: this.limit, pagenum: this.pagenum })
+                .then(res => {
+                  this.total = res.data.total;
+                  this.changeCurMusic(res.data.data);
+                });
             }
           });
         })
         .catch(_ => {
           console.log(_);
         });
+    },
+    upload(e) {
+      // 在事件源中取出文件域
+      let file = e.target.files[0];
+      // 创建实例
+      let formdata = new FormData();
+      // 添加参数
+      formdata.append("file", file);
+      // 请求上传图片的接口
+      this.$api.music.upload(formdata).then(res => {
+        if (res.data.code == 1) {
+          this.form.pic = "http://localhost:3000" + res.data.url;
+        }
+      });
+    },
+    handleEnter() {
+      // 点击确定判断是添加的dialog还是修改的dialog
+      // this.form.isup == 1 || true ? 1 : 0;
+      this.form.isup = this.form.isup ? "1" : "0";
+      if (this.myMsg == "添加") {
+        this.$api.music.addmusic(this.form).then(res => {
+          if (res.data.code === 1) {
+            this.$api.music
+              .getMusic({ pagenum: this.pagenum, limit: this.limit })
+              .then(res => {
+                if (res.data.code == 1) {
+                  this.total = res.data.total;
+                  this.changeCurMusic(res.data.data);
+                } else {
+                  this.$message({
+                    type: "error",
+                    message: "失败"
+                  });
+                }
+              });
+          } else {
+            this.$message({
+              type: "error",
+              message: "失败"
+            });
+          }
+        });
+      } else {
+        this.$api.music.updatemusic(this.form).then(res => {
+          if (res.data.code === 1) {
+            this.$api
+              .getMusic({ pagenum: this.pagenum, limit: this.limit })
+              .then(res => {
+                if (res.data.code == 1) {
+                  this.total = res.data.total;
+                  this.changeCurMusic(res.data.data);
+                }
+              });
+          }
+        });
+      }
+      this.dialogFormVisible = false;
+    },
+    handleChange(val) {
+      console.log(this.total, this.limit);
+      this.pagenum = val;
+      console.log(val);
+      this.$api.music
+        .getMusic({ pagenum: val, limit: this.limit })
+        .then(res => {
+          this.changeCurMusic(res.data.data);
+        });
     }
-    // handleAdd() {
-    //   this.changeList = false;
-    //   this.handleEdit();
-    // },
-    // handleChange(index, row) {
-    //   this.changeList = true;
-    //   this.handleEdit(index, row);
-    // }
   },
   computed: {
     ...mapState({
