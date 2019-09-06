@@ -2,7 +2,7 @@
  * @Author: 苑振东 
  * @Date: 2019-09-04 19:50:12 
  * @Last Modified by: 苑振东
- * @Last Modified time: 2019-09-05 17:51:17
+ * @Last Modified time: 2019-09-06 10:35:43
  */
 <template>
   <el-container class="m-wraper-music">
@@ -160,6 +160,7 @@ export default {
         });
     },
     handleEdit(index, row) {
+      // 修改添加公用函数
       // 判断是否传入参数 如果有参数则说明是修改 没有参数则是添加
       if (!index && !row) {
         this.changeList = false;
@@ -179,14 +180,23 @@ export default {
       this.dialogFormVisible = true;
     },
     handleDelete(index, row) {
+      // 删除
       this.msg = "删除";
-      this.handleClose(row);
+      this.handleClose(row); // 调用弹窗关闭
     },
     handleClose(row) {
       this.$confirm(`确认${this.msg}？`)
         .then(_ => {
           this.$api.music.deleteMusic({ id: row.id }).then(res => {
             if (res.data.code == 1) {
+              this.$message({
+                type: "success",
+                message: "成功"
+              });
+              // 判断删除的页码 是否需要向前追加请求数据
+              this.curMusic.length <= 1 && this.pagenum > 1
+                ? --this.pagenum
+                : this.pagenum;
               this.$api.music
                 .getMusic({ limit: this.limit, pagenum: this.pagenum })
                 .then(res => {
@@ -258,6 +268,7 @@ export default {
       this.dialogFormVisible = false;
     },
     handleChange(val) {
+      // 分页器页码改变触发函数
       console.log(this.total, this.limit);
       this.pagenum = val;
       console.log(val);
