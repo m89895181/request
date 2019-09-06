@@ -2,7 +2,7 @@
  * @Author: 苑振东
  * @Date: 2019-09-04 20:18:13
  * @Last Modified by: 苑振东
- * @Last Modified time: 2019-09-04 20:31:05
+ * @Last Modified time: 2019-09-06 10:41:14
  */
 import axios from 'axios'
 import router from '../router'
@@ -36,10 +36,10 @@ instance.interceptors.response.use(function(response) {
     let { status } = error.response
         // 判断状态码是否小于500 小于500是前端错误
     if (status < 500) {
-        switch (key) {
+        switch (status) {
             case 422:
                 {
-                    alert('缺少重要参数或者已经注册过')
+                    alert('缺少重要参数 输入有误')
                     return
                 }
             case 401:
